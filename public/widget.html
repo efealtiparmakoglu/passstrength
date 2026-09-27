@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>passstrength widget</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem;
+         display: flex; justify-content: center; }
+  .card { width: min(34rem, 100%); }
+  h1 { font-size: 1.25rem; margin: 0 0 0.25rem; }
+  p.sub { margin: 0 0 1.25rem; opacity: 0.7; font-size: 0.9rem; }
+  input { width: 100%; padding: 0.7rem 0.9rem; font-size: 1.05rem;
+          border: 1px solid #8888; border-radius: 8px; background: transparent;
+          color: inherit; box-sizing: border-box; }
+  .bar { font-size: 1.6rem; letter-spacing: 2px; margin: 0.9rem 0 0.2rem; }
+  .label { font-weight: 600; text-transform: uppercase; font-size: 0.9rem; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem;
+       font-size: 0.9rem; margin: 1rem 0; }
+  dt { opacity: 0.7; } dd { margin: 0; font-variant-numeric: tabular-nums; }
+  ul { font-size: 0.9rem; padding-left: 1.1rem; }
+  .foot { font-size: 0.8rem; opacity: 0.6; margin-top: 1.5rem; }
+  .s0 { color: #d33; } .s1 { color: #d9730d; } .s2 { color: #c9a227; }
+  .s3 { color: #4a9; } .s4 { color: #3a3; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>passstrength</h1>
+    <p class="sub">Everything runs in this page. Nothing is sent anywhere.</p>
+    <input id="pw" type="password" placeholder="type a password to score it" autocomplete="off" autofocus>
+    <div class="bar" id="bar">░░░░░</div>
+    <div class="label" id="label">&nbsp;</div>
+    <dl id="times"></dl>
+    <ul id="notes"></ul>
+    <p class="foot">The same scoring core the CLI uses (<code>public/scoring.js</code>,
+      generated from <code>src/scoring.ts</code>). The estimates are a model, not a proof.</p>
+  </div>
+  <script type="module">
+    import { scorePassword, humanizeSeconds } from "./scoring.js";
+
+    const input = document.getElementById("pw");
+    const bar = document.getElementById("bar");
+    const label = document.getElementById("label");
+    const times = document.getElementById("times");
+    const notes = document.getElementById("notes");
+
+    function render(password) {
+      const r = scorePassword(password);
+      bar.className = `bar s${r.score}`;
+      bar.textContent = "█".repeat(r.score + 1) + "░".repeat(4 - r.score);
+      label.className = `label s${r.score}`;
+      label.textContent = r.label;
+
+      const rows = [
+        ["online, throttled (100/hr)", r.crackSeconds.onlineThrottled],
+        ["online, unthrottled (10k/hr)", r.crackSeconds.onlineUnthrottled],
+        ["offline, bcrypt (10k/s)", r.crackSeconds.offlineSlowHash],
+        ["offline, GPU vs fast hash", r.crackSeconds.offlineFastHash],
+      ];
+      times.innerHTML = rows
+        .map(([name, sec]) => `<dt>${name}</dt><dd>${humanizeSeconds(sec)}</dd>`)
+        .join("");
+
+      const items = [
+        ...r.patterns.map((p) => `[${p.kind}] ${p.note}`),
+        ...r.warnings.map((w) => `! ${w}`),
+        ...r.suggestions.map((s) => `→ ${s}`),
+      ];
+      notes.innerHTML = items.map((i) => `<li>${i}</li>`).join("");
+    }
+
+    input.addEventListener("input", () => render(input.value));
+    render("");
+  </script>
+</body>
+</html>

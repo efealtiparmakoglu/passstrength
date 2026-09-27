@@ -1,0 +1,12 @@
+{
+  "name": "passstrength",
+  "version": "1.0.0",
+  "description": "Offline password strength checker: pattern detection, crack-time estimation, browser widget. Nothing leaves the machine. Zero dependencies.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/ && node scripts/build-widget.mjs",
+    "widget": "node scripts/build-widget.mjs"
+  },
+  "engines": { "node": ">=22.18" },
+  "license": "MIT"
+}
